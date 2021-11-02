@@ -1,0 +1,16 @@
+version: '3'
+services:  
+  nginx:    
+    image: nginx:latest
+    container_name: nginx
+    volumes: 
+        - ./nginx.conf:/etc/nginx/nginx.conf   
+        - ./certs:/etc/nginx/certs    
+    ports:     
+     - 80:80     
+     - 443:443 
+  appsec:  
+    image: appsec:latest  
+    container_name: appsec  
+    expose:     
+     - "8080"
