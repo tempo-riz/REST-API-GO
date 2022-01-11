@@ -1,4 +1,4 @@
-# Part 1
+# Part 1 - Building a RESTful API in Golang
 
 
 All REST endpoints are successfully avalaible for students and teachers as follow at 
@@ -58,3 +58,25 @@ for example :
     docker run --publish 8080:8080 app-sec
 
 Now app is running inside of container and you can still test it with ports "published"
+
+
+# Part2 - TLS Protection
+
+## Requirements
+
+    nginx, docker-compose 
+
+## Goal
+
+Implementing a reverse proxy that will terminate the TLS
+connection.
+
+Using nginx as a http gateway (
+redirect traffic on
+HTTP port 80 to the HTTP listener of the application )
+
+nginx.conf is updated with our subdomain, key and certificate 
+
+## Run all of it in docker compose
+
+...

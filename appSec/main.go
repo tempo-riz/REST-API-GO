@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/http"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -66,10 +65,6 @@ func getStudentByID(c *gin.Context) {
 	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "student not found"})
 }
 
-// func removeStudent(slice []student, s int) []student {
-//     return append(slice[:s], slice[s+1:]...)
-// }
-
 func deleteStudentByID(c *gin.Context) {
 	id := c.Param("id")
 
@@ -79,7 +74,6 @@ func deleteStudentByID(c *gin.Context) {
 		if students[i].ID == id {
 			c.IndentedJSON(http.StatusOK, students[i])
 			copy(students[i:], students[i+1:]) // Shift a[i+1:] left one index.
-			// students[len(students)-1] = ""     // Erase last element (write zero value).
 			students = students[:len(students)-1]     // Truncate slice.
 
 			return
@@ -135,7 +129,6 @@ func deleteTeacherByID(c *gin.Context) {
 		if teachers[i].ID == id {
 			c.IndentedJSON(http.StatusOK, teachers[i])
 			copy(teachers[i:], teachers[i+1:]) // Shift a[i+1:] left one index.
-			// teachers[len(teachers)-1] = ""     // Erase last element (write zero value).
 			teachers = teachers[:len(teachers)-1]     // Truncate slice.
 
 			return
