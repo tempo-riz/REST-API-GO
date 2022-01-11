@@ -6,62 +6,156 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// album represents data about a record album.
-type album struct {
+type student struct {
 	ID     string  `json:"id"`
-	Title  string  `json:"title"`
-	Artist string  `json:"artist"`
-	Price  float64 `json:"price"`
+	Lastname  string  `json:"Lastname"`
+	Name string  `json:"Name"`
+	Filiere string `json:"filiere"`
 }
 
-// albums slice to seed record album data.
-var albums = []album{
-	{ID: "1", Title: "Blue Train", Artist: "John Coltrane", Price: 56.99},
-	{ID: "2", Title: "Jeru", Artist: "Gerry Mulligan", Price: 17.99},
-	{ID: "3", Title: "Sarah Vaughan and Clifford Brown", Artist: "Sarah Vaughan", Price: 39.99},
+type teacher struct {
+	ID     string  `json:"id"`
+	Lastname  string  `json:"Lastname"`
+	Name string  `json:"Name"`
+	Class  string `json:"class"`
 }
 
-// getAlbums responds with the list of all albums as JSON.
-func getAlbums(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, albums)
+var students = []student{
+    {ID: "1", Lastname: "Montandon", Name: "Philippe", Filiere: "ISC"},
+    {ID: "2", Lastname: "Chatillon", Name: "Thibault", Filiere: "ISC"},
 }
 
-// postAlbums adds an album from JSON received in the request body.
-func postAlbums(c *gin.Context) {
-	var newAlbum album
+var teachers = []teacher{
+    {ID: "1", Lastname: "Pfeiffer", Name: "Ludovic", Class: "A401"},
+    {ID: "2", Lastname: "Ouafi", Name: "Khaled", Class: "A402"},
+}
+
+// getStudents responds with the list of all students as JSON.
+func getStudents(c *gin.Context) {
+	c.IndentedJSON(http.StatusOK, students)
+}
+
+// postStudents adds an student from JSON received in the request body.
+func postStudents(c *gin.Context) {
+	var newStudent student
 
 	// Call BindJSON to bind the received JSON to
-	// newAlbum.
-	if err := c.BindJSON(&newAlbum); err != nil {
+	// newStudent.
+	if err := c.BindJSON(&newStudent); err != nil {
 		return
 	}
 
-	// Add the new album to the slice.
-	albums = append(albums, newAlbum)
-	c.IndentedJSON(http.StatusCreated, newAlbum)
+	// Add the new student to the slice.
+	students = append(students, newStudent)
+	c.IndentedJSON(http.StatusCreated, newStudent)
 }
 
-// getAlbumByID locates the album whose ID value matches the id
-// parameter sent by the client, then returns that album as a response.
-func getAlbumByID(c *gin.Context) {
+// getStudentByID locates the student whose ID value matches the id
+// parameter sent by the client, then returns that student as a response.
+func getStudentByID(c *gin.Context) {
 	id := c.Param("id")
 
-	// Loop through the list of albums, looking for
-	// an album whose ID value matches the parameter.
-	for _, a := range albums {
+	// Loop through the list of students, looking for
+	// an student whose ID value matches the parameter.
+	for _, a := range students {
 		if a.ID == id {
 			c.IndentedJSON(http.StatusOK, a)
 			return
 		}
 	}
-	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "album not found"})
+	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "student not found"})
+}
+
+// func removeStudent(slice []student, s int) []student {
+//     return append(slice[:s], slice[s+1:]...)
+// }
+
+func deleteStudentByID(c *gin.Context) {
+	id := c.Param("id")
+
+	// Loop through the list of students, looking for
+	// an student whose ID value matches the parameter.
+	for i := 0; i < len(students); i++ {
+		if students[i].ID == id {
+			c.IndentedJSON(http.StatusOK, students[i])
+			copy(students[i:], students[i+1:]) // Shift a[i+1:] left one index.
+			// students[len(students)-1] = ""     // Erase last element (write zero value).
+			students = students[:len(students)-1]     // Truncate slice.
+
+			return
+		}
+	}
+	
+	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "student not found"})
+}
+
+
+// getTeachers responds with the list of all teachers as JSON.
+func getTeachers(c *gin.Context) {
+	c.IndentedJSON(http.StatusOK, teachers)
+}
+
+// postTeachers adds an teacher from JSON received in the request body.
+func postTeachers(c *gin.Context) {
+	var newTeacher teacher
+
+	// Call BindJSON to bind the received JSON to
+	// newTeacher.
+	if err := c.BindJSON(&newTeacher); err != nil {
+		return
+	}
+
+	// Add the new teacher to the slice.
+	teachers = append(teachers, newTeacher)
+	c.IndentedJSON(http.StatusCreated, newTeacher)
+}
+
+// getTeacherByID locates the teacher whose ID value matches the id
+// parameter sent by the client, then returns that teacher as a response.
+func getTeacherByID(c *gin.Context) {
+	id := c.Param("id")
+
+	// Loop through the list of teachers, looking for
+	// an teacher whose ID value matches the parameter.
+	for _, a := range teachers {
+		if a.ID == id {
+			c.IndentedJSON(http.StatusOK, a)
+			return
+		}
+	}
+	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "teacher not found"})
+}
+
+func deleteTeacherByID(c *gin.Context) {
+	id := c.Param("id")
+
+	// Loop through the list of teachers, looking for
+	// an teacher whose ID value matches the parameter.
+	for i := 0; i < len(teachers); i++ {
+		if teachers[i].ID == id {
+			c.IndentedJSON(http.StatusOK, teachers[i])
+			copy(teachers[i:], teachers[i+1:]) // Shift a[i+1:] left one index.
+			// teachers[len(teachers)-1] = ""     // Erase last element (write zero value).
+			teachers = teachers[:len(teachers)-1]     // Truncate slice.
+
+			return
+		}
+	}
+	
+	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "teacher not found"})
 }
 
 func main() {
 	router := gin.Default()
-	router.GET("/albums", getAlbums)
-	router.GET("/albums/:id", getAlbumByID)
-	router.POST("/albums", postAlbums)
+	router.GET("/students", getStudents)
+	router.POST("/students", postStudents)
+	router.GET("/students/:id", getStudentByID)
+	router.DELETE("/students/:id", deleteStudentByID)
+
+	router.GET("/teachers", getTeachers)
+	router.POST("/teachers", postTeachers)
+	router.GET("/teachers/:id", getTeacherByID)
+	router.DELETE("/teachers/:id", deleteTeacherByID)
 
 	router.Run("0.0.0.0:8080")
 }
