@@ -53,14 +53,14 @@ for example :
 
 ## Build docker image 
 
-    docker build --tag app-sec .
+    docker build --tag appsec .
 ## Run image
-    docker run --publish 8080:8080 app-sec
+    docker run --publish 8080:8080 appsec
 
 Now app is running inside of container and you can still test it with ports "published"
 
 
-# Part2 - TLS Protection
+# Part 2 - TLS Protection
 
 ## Requirements
 
@@ -77,6 +77,41 @@ HTTP port 80 to the HTTP listener of the application )
 
 nginx.conf is updated with our subdomain, key and certificate 
 
-## Run all of it in docker compose
+openssl was used to create those key and certificate
 
-...
+## Run  in docker compose
+
+    docker-compose up 
+
+if we try to acces http://0.0.0.0/students via browser we can see 
+
+that it's getting redirected to it's secured version : https://0.0.0.0/students
+
+I used the following ciphers to harden the tls config :
+
+    ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
+
+TLS analyzer
+
+I failed to compile the library with maven getting :
+
+    [INFO] BUILD FAILURE
+    [ERROR] Failed to execute goal com.mycila:license-maven-plugin:4.2.rc2:format (default) on project TLS-Scanner
+
+# Partie 3 - Authentication
+
+Here we want to add authentication and authorization on our endpoints using basic authentication and Oauth2.0/OIDC
+
+## Adding Authorization Logic
+
+- foo can only perform GET requests 
+- aristote can perform all HTTP requests
+
+I implemented the logic this way :
+
+    if c.Request.Method != "GET" && user != "aristote" {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "acces denied"})
+		return
+	}
+
+## Implementingan OIDC Consumerusing Okta
