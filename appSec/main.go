@@ -37,20 +37,12 @@ var teachers = []teacher{
 
 // getStudents responds with the list of all students as JSON.
 func getStudents(c *gin.Context) {
-	if !check_auth(c) {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "acces denied"})
-		return
-	}
 
 	c.IndentedJSON(http.StatusOK, students)
 }
 
 // postStudents adds an student from JSON received in the request body.
 func postStudents(c *gin.Context) {
-	if !check_auth(c) {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "acces denied"})
-		return
-	}
 
 	var newStudent student
 
@@ -69,10 +61,6 @@ func postStudents(c *gin.Context) {
 // getStudentByID locates the student whose ID value matches the id
 // parameter sent by the client, then returns that student as a response.
 func getStudentByID(c *gin.Context) {
-	if !check_auth(c) {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "acces denied"})
-		return
-	}
 
 	id := c.Param("id")
 
@@ -88,10 +76,6 @@ func getStudentByID(c *gin.Context) {
 }
 
 func deleteStudentByID(c *gin.Context) {
-	if !check_auth(c) {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "acces denied"})
-		return
-	}
 	id := c.Param("id")
 
 	// Loop through the list of students, looking for
@@ -111,20 +95,12 @@ func deleteStudentByID(c *gin.Context) {
 
 // getTeachers responds with the list of all teachers as JSON.
 func getTeachers(c *gin.Context) {
-	if !verify(c) {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "acces denied"})
-		return
-	}
 
 	c.IndentedJSON(http.StatusOK, teachers)
 }
 
 // postTeachers adds an teacher from JSON received in the request body.
 func postTeachers(c *gin.Context) {
-	if !verify(c) {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "acces denied"})
-		return
-	}
 
 	var newTeacher teacher
 
@@ -142,10 +118,6 @@ func postTeachers(c *gin.Context) {
 // getTeacherByID locates the teacher whose ID value matches the id
 // parameter sent by the client, then returns that teacher as a response.
 func getTeacherByID(c *gin.Context) {
-	if !verify(c) {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "acces denied"})
-		return
-	}
 
 	id := c.Param("id")
 
@@ -161,10 +133,6 @@ func getTeacherByID(c *gin.Context) {
 }
 
 func deleteTeacherByID(c *gin.Context) {
-	if !verify(c) {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "acces denied"})
-		return
-	}
 
 	id := c.Param("id")
 
@@ -196,7 +164,7 @@ var toValidate = map[string]string{
 	"cid": os.Getenv("0oa3lp6i6zXA2yMvp5d7"),
 }
 
-func verify(c *gin.Context) bool {
+func check_teacher_authentication(c *gin.Context){
 	status := true
 	token := c.Request.Header.Get("Authorization")
 	if strings.HasPrefix(token, "Bearer ") {
@@ -216,30 +184,53 @@ func verify(c *gin.Context) bool {
 		c.String(http.StatusUnauthorized, "Unauthorized")
 		status = false
 	}
-	return status
+
+	if(status){
+		c.Next() //continue routing 
+	}else{
+		c.AbortWithStatus(http.StatusUnauthorized)
+	}
+}
+
+func check_student_authorization(c *gin.Context){
+	 user := c.MustGet(gin.AuthUserKey).(string) // get username
+
+    m := make(map[string][]string) //dico
+    m["Thibault"] = append(m["Thibault"], "GET","POST")
+    m["Philippe"] = append(m["Philippe"], "GET", "DELETE")
+
+    if val, ok := m[user]; ok { //if dico contains key (user)
+        for _, v := range val {
+            if v == c.Request.Method { //if they have correct acces right for query
+                c.Next() //continue routing 
+            }
+        }
+		//if they dont
+        c.AbortWithStatus(http.StatusForbidden)
+    } else {
+		//if get ok else forbidden
+		if "GET" == c.Request.Method{
+			c.Next()
+		}
+		//if not ...
+        c.AbortWithStatus(http.StatusForbidden)
+    }
 }
 
 func main() {
 	router := gin.Default()
 	authorized := router.Group("/", gin.BasicAuth(gin.Accounts{"foo": "bar", "aristote": "Eucl1de"}))
 
-	authorized.GET("/students", getStudents)
-	authorized.GET("/students/:id", getStudentByID)
-	authorized.GET("/teachers", getTeachers)
-	authorized.GET("/teachers/:id", getTeacherByID)
-
-	authorized.POST("/students", postStudents)
-	authorized.POST("/teachers", postTeachers)
-
-	authorized.DELETE("/students/:id", deleteStudentByID)
-	authorized.DELETE("/teachers/:id", deleteTeacherByID)
+	authorized.GET("/students", check_student_authorization, getStudents)
+	authorized.GET("/students/:id", check_student_authorization, getStudentByID)
+	authorized.POST("/students", check_student_authorization, postStudents)
+	authorized.DELETE("/students/:id", check_student_authorization, deleteStudentByID)
+	
+	authorized.GET("/teachers", check_teacher_authentication, getTeachers)
+	authorized.GET("/teachers/:id", check_teacher_authentication, getTeacherByID)
+	authorized.POST("/teachers", check_teacher_authentication, postTeachers)
+	authorized.DELETE("/teachers/:id", check_teacher_authentication, deleteTeacherByID)
 
 	router.Run("0.0.0.0:8080")
 
 }
-
-// curl -X POST -H "Content-Type: application/json" \
-//     -d '{ID: "1", Lastname: "Pfeiffer", Name: "Ludovic", Class: "A401"}' \
-//     http://aristote:Eucl1de@0.0.0.0:8080/students
-
-//token 00FOcy87-zhZJqUVGLztyy740UlnIUwZBf_aOQg0x8

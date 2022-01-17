@@ -59,7 +59,7 @@ for example :
 
 Now app is running inside of container and you can still test it with ports "published"
 
-
+<br><br>
 # Part 2 - TLS Protection
 
 ## Requirements
@@ -97,6 +97,7 @@ I failed to compile the library with maven getting :
 
     [INFO] BUILD FAILURE
     [ERROR] Failed to execute goal com.mycila:license-maven-plugin:4.2.rc2:format (default) on project TLS-Scanner
+<br><br>
 
 # Partie 3 - Authentication
 
@@ -113,5 +114,27 @@ I implemented the logic this way :
 		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "acces denied"})
 		return
 	}
+<br>
 
 ## Implementingan OIDC Consumerusing Okta
+
+I finally connected postman to okta, using a fresh generated token, and could test and validate requests with postman
+
+<br>
+
+## Implement authorization
+
+For this part I used a hashmap to create authorization logic depending on who is sending a request, sending correct HTTP responses codes for denied requests :
+
+    if val, ok := m[user]; ok { //if dico contains key (user)
+        for _, v := range val {
+            if v == c.Request.Method { //if they have correct acces right for query
+                c.Next() //continue routing 
+            }
+        }
+		//if they dont
+        c.AbortWithStatus(http.StatusForbidden)
+
+<br><br>
+
+# Part 4 - SecretManagement
