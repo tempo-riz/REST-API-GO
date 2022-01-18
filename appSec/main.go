@@ -164,7 +164,7 @@ var toValidate = map[string]string{
 	"cid": os.Getenv("0oa3lp6i6zXA2yMvp5d7"),
 }
 
-func check_teacher_authentication(c *gin.Context){
+func check_teacher_authentication(c *gin.Context) {
 	status := true
 	token := c.Request.Header.Get("Authorization")
 	if strings.HasPrefix(token, "Bearer ") {
@@ -181,40 +181,38 @@ func check_teacher_authentication(c *gin.Context){
 			status = false
 		}
 	} else {
-		c.String(http.StatusUnauthorized, "Unauthorized")
+		//c.String(http.StatusUnauthorized, "Unauthorized")
 		status = false
 	}
 
-	if(status){
-		c.Next() //continue routing 
-	}else{
+	if status {
+		c.Next() //continue routing
+	} else {
 		c.AbortWithStatus(http.StatusUnauthorized)
 	}
 }
 
-func check_student_authorization(c *gin.Context){
-	 user := c.MustGet(gin.AuthUserKey).(string) // get username
+func check_student_authorization(c *gin.Context) {
+	user := c.MustGet(gin.AuthUserKey).(string) // get username
 
-    m := make(map[string][]string) //dico
-    m["Thibault"] = append(m["Thibault"], "GET","POST")
-    m["Philippe"] = append(m["Philippe"], "GET", "DELETE")
+	m := make(map[string][]string) //dico
+	m["Thibault"] = append(m["Thibault"], "GET", "POST")
+	m["Philippe"] = append(m["Philippe"], "GET", "DELETE")
 
-    if val, ok := m[user]; ok { //if dico contains key (user)
-        for _, v := range val {
-            if v == c.Request.Method { //if they have correct acces right for query
-                c.Next() //continue routing 
-            }
-        }
-		//if they dont
-        c.AbortWithStatus(http.StatusForbidden)
-    } else {
-		//if get ok else forbidden
-		if "GET" == c.Request.Method{
-			c.Next()
+	if val, ok := m[user]; ok { //if dico contains key (user)
+		for _, v := range val {
+			if v == c.Request.Method { //if they have correct acces right for query
+				c.Next() //continue routing
+			}
 		}
-		//if not ...
-        c.AbortWithStatus(http.StatusForbidden)
-    }
+	} else {
+		//if get ok else forbidden
+		if c.Request.Method == "GET" {
+			c.Next()
+		} else {
+			c.AbortWithStatus(http.StatusForbidden)
+		}
+	}
 }
 
 func main() {
@@ -225,12 +223,12 @@ func main() {
 	authorized.GET("/students/:id", check_student_authorization, getStudentByID)
 	authorized.POST("/students", check_student_authorization, postStudents)
 	authorized.DELETE("/students/:id", check_student_authorization, deleteStudentByID)
-	
+
 	authorized.GET("/teachers", check_teacher_authentication, getTeachers)
 	authorized.GET("/teachers/:id", check_teacher_authentication, getTeacherByID)
 	authorized.POST("/teachers", check_teacher_authentication, postTeachers)
 	authorized.DELETE("/teachers/:id", check_teacher_authentication, deleteTeacherByID)
 
-	router.Run("0.0.0.0:8080")
+	router.Run()
 
 }
