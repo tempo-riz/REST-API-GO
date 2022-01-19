@@ -13,5 +13,7 @@ services:
   appsec:  
     image: appsec:latest  
     container_name: appsec  
+    env_file:
+    - variables.env
     expose:     
      - "8080"
