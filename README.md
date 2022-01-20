@@ -1,3 +1,8 @@
+
+## Author : Thibault Chatillon
+
+<br>
+
 # Part 1 - Building a RESTful API in Golang
 
 
