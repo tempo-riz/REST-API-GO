@@ -164,20 +164,24 @@ I created the file variables.env containting the key-values to inject in docker-
     - variables.env
 This is what's inside it in format key=value
 
-    foo=bar
-    aristote=Eucl1de
-    a=b
-    permissions=foo:GET,POST aristote:GET,DELETE 
+    POST=foo user1
+    DELETE=aristote
+    USERS= foo:bar artistote:Eucl1de user1:pass1
 
-Now in our main.go we can retrieve them, and convert those values into a Map 
+Now in our main.go we can retrieve them, and convert those values into a Map splice
 
-    for _, e := range os.Environ() {
-		if i := strings.Index(e, "="); i >= 0 {
+    getSpliceFromEnv("KEY")
+
+And then, for users we can parse them into a map:
+
+    users := make(map[string]string)
+	for _, e := range getSpliceFromEnv("USERS") {
+		if i := strings.Index(e, ":"); i >= 0 {
 			users[e[:i]] = e[i+1:]
 		}
 	}
 
-and now we can use our creditentials without them beeing readable by anyone accessing the code
+Now we can use our creditentials without them beeing readable by anyone accessing our code
 
 
 Before :
@@ -190,11 +194,16 @@ Now :
 
 Same concept is used for permission logic in check_student_authorization function :
 
-I retrieve value containing specific permissions then convert those in a map, whose form is :
+I retrieve value containing a list with allowed users, check if current user is in it :
 
-    aristote:[GET,DELETE]
-    foo:[GET,POST]]
-
+    switch c.Request.Method {
+	case "POST":
+		if contains(getSpliceFromEnv("POST"), user) {
+			c.Next()
+		} else {
+			c.AbortWithStatus(http.StatusForbidden)
+		}
+    ...
 
 <br><br>
 

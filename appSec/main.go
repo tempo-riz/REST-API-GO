@@ -170,37 +170,51 @@ func check_teacher_authentication(c *gin.Context) {
 	}
 }
 
+func getSpliceFromEnv(key string) []string { //return [user1, user2] from env key=user1 user2
+	return strings.Split(os.Getenv(key), " ")
+}
+
+func contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
+
 func check_student_authorization(c *gin.Context) {
 	user := c.MustGet(gin.AuthUserKey).(string) // get username
 
-	m := make(map[string][]string)
-	p := strings.Split(os.Getenv("permissions"), " ") //build map from env variable like this map[aristote:[GET,DELETE] foo:[GET,POST]]
-	for i := range p {
-		split := strings.Split(p[i], ":")
-		m[split[0]] = append(m[split[0]], split[1:]...)
-	}
+	post := getSpliceFromEnv("POST")
+	delete := getSpliceFromEnv("DELETE")
 
-	if val, ok := m[user]; ok { //if dico contains key (user)
-		for _, v := range val {
-			if v == c.Request.Method { //if they have correct acces right for query
-				c.Next() //continue routing
-			}
-		}
-	} else {
-		//if get ok else forbidden
-		if c.Request.Method == "GET" {
+	switch c.Request.Method {
+	case "POST":
+		if contains(post, user) {
 			c.Next()
 		} else {
 			c.AbortWithStatus(http.StatusForbidden)
 		}
+	case "DELETE":
+		if contains(delete, user) {
+			c.Next()
+		} else {
+			c.AbortWithStatus(http.StatusForbidden)
+		}
+	case "GET":
+		c.Next() //all authentified users can use GET
+	default:
+		c.AbortWithStatus(http.StatusForbidden)
 	}
 }
 
 func main() {
 	//retrieve logins from env variable
 	users := make(map[string]string)
-	for _, e := range os.Environ() {
-		if i := strings.Index(e, "="); i >= 0 {
+
+	for _, e := range getSpliceFromEnv("USERS") {
+		if i := strings.Index(e, ":"); i >= 0 {
 			users[e[:i]] = e[i+1:]
 		}
 	}
